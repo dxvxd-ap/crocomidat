@@ -1,12 +1,24 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+if (!isset($_SESSION['usuario'])) {
+    header("Location: ../index.php");
+    exit();
+}
 include('conexion.php');
-include("barra_lateral.php");
 ?>
-<html>
-    
-<title>Locales Tabla</title>
-<link rel="icon" href="../img/logo.png" type="image/x-icon">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios Tabla - Crocomidat</title>
+    <link rel="stylesheet" href="estilo.css?v=<?php echo time(); ?>">
+    <link rel="icon" href="../img/logo.png" type="image/x-icon">
+</head>
 <body>
+<?php include("barra_lateral.php"); ?>
 <div class="ContenedorPrincipal">  
 <?php
 $filasmax = 7;
@@ -40,56 +52,61 @@ from users u ORDER BY u.name ASC LIMIT " . (($pagina - 1) * $filasmax)  . "," . 
 
 
 <div class="ContenedorTabla">
-   <form method="POST" style="padding:20px; margin-top: 30px;">
-   <h1 style="color: white;">Lista de usuarios</h1>
-  
-   <div class="ContBuscar">
-   <div style="float: left;">
-   <a href="usuarios_tabla.php" class="BotonesTeam" style="background-color: yellowgreen; font-weight:bold;">Inicio</a>
-   <input class="BotonesTeam" style="background-color: yellowgreen; font-weight:bold;"type="submit" value="Buscar" name="btnbuscar">
-   <input class="CajaTextoBuscar" type="text" name="txtbuscar"  placeholder="Ingresar el correo" autocomplete="off" >
-   </div>
-   <div style="float:right;">
-   <?php echo "<a class='BotonesTeam5' href=\"usuarios_registrar1.php?pag=$pagina\">Agregar usuario</a>";?>
-   </div>
-   </div>
-           </form>
+   <form method="POST">
+       <h1>Lista de usuarios</h1>
+       <div class="ContBuscar">
+           <div>
+               <a href="usuarios_tabla.php" class="BotonesTeam"><i class="bi bi-arrow-clockwise"></i> Inicio</a>
+               <input class="CajaTextoBuscar" type="text" name="txtbuscar" placeholder="Buscar por nombre o correo..." autocomplete="off">
+               <button class="BotonesTeam" type="submit" name="btnbuscar"><i class="bi bi-search"></i> Buscar</button>
+           </div>
+           <div>
+               <?php echo "<a class='BotonesTeam5' href=\"usuarios_registrar1.php?pag=$pagina\"><i class=\"bi bi-person-plus-fill\"></i> Agregar usuario</a>";?>
+           </div>
+       </div>
+   </form>
    <table>
-           <tr>
-           <th>Nombre</th>
-           <th>Email</th>
-           <th>password</th>
-           <th>rol</th>
-           <th>Acciones</th>
-           </tr>
-       <?php
-       while ($mostrar = mysqli_fetch_assoc($sqlusu))
-       {
-          
-           echo "<tr style='background:#101010; color:white;'>";
-           echo "<td>".$mostrar['name']."</td>";
-           echo "<td>".$mostrar['email']."</td>";
-           echo "<td>".$mostrar['psswd']."</td>";
-           echo "<td>".$mostrar['rol']."</td>";
-           echo "<td style='width:24%'>
-           <a class='BotonesTeam1' href=\"usuarios_ver.php?id=$mostrar[email]&pag=$pagina\">&#x1F50D;</a>
-           <a class='BotonesTeam2' href=\"usuarios_modificar.php?id=$mostrar[email]&pag=$pagina\">&#128397;</a>
-           <a class='BotonesTeam3' href=\"usuarios_eliminar.php?id=$mostrar[email]&pag=$pagina\" onClick=\"return confirm('¿Estás seguro de eliminar el usuario $mostrar[name]?')\">&#10006;</a>
-           </td>"; 
-          
-       }
-       ?>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Correo Electrónico</th>
+                <th>Contraseña</th>
+                <th>Rol</th>
+                <th style="text-align: center; width: 140px;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php
+        if ($sqlusu && mysqli_num_rows($sqlusu) > 0) {
+            while ($mostrar = mysqli_fetch_assoc($sqlusu))
+            {
+                $rolBadge = ($mostrar['rol'] == '1') 
+                    ? "<span style='background: #ecfccb; color: #365314; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: 700;'><i class='bi bi-shield-lock-fill'></i> Admin</span>"
+                    : "<span style='background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;'><i class='bi bi-person'></i> Usuario</span>";
+
+                echo "<tr>";
+                echo "<td><strong style='color: #0f172a; font-weight: 600;'><i class='bi bi-person-circle' style='color: #64748b; margin-right: 8px;'></i>".htmlspecialchars($mostrar['name'])."</strong></td>";
+                echo "<td><i class='bi bi-envelope' style='color: #65a30d; margin-right: 6px;'></i><span style='color: #334155;'>".htmlspecialchars($mostrar['email'])."</span></td>";
+                echo "<td><span style='color: #94a3b8; font-family: monospace; letter-spacing: 2px;'>••••••••••••</span></td>";
+                echo "<td>".$rolBadge."</td>";
+                echo "<td style='text-align: center; white-space: nowrap;'>
+                <a class='BotonesTeam1' title='Ver detalles' href=\"usuarios_ver.php?id=".urlencode($mostrar['email'])."&pag=$pagina\"><i class=\"bi bi-eye-fill\"></i></a>
+                <a class='BotonesTeam2' title='Modificar' href=\"usuarios_modificar.php?id=".urlencode($mostrar['email'])."&pag=$pagina\"><i class=\"bi bi-pencil-fill\"></i></a>
+                <a class='BotonesTeam3' title='Eliminar' href=\"usuarios_eliminar.php?id=".urlencode($mostrar['email'])."&pag=$pagina\" onClick=\"return confirm('¿Estás seguro de eliminar al usuario ".htmlspecialchars($mostrar['name'])."?')\"><i class=\"bi bi-trash-fill\"></i></a>
+                </td>"; 
+                echo "</tr>";
+            }
+        } else {
+            echo "<tr><td colspan='5' style='text-align: center; padding: 30px; color: var(--text-muted);'>No se encontraron usuarios registrados.</td></tr>";
+        }
+        ?>
+        </tbody>
    </table>
-   
 
-   
-
-
-   <div style='text-align:right'>
-   <br>
-   <?php echo "Total de locales: ".$maxusutabla;?>
+   <div style='text-align:right; margin-top: 16px; color: var(--text-muted); font-size: 0.9rem;'>
+       Total de usuarios: <strong style="color: var(--primary-lime);"><?php echo $maxusutabla;?></strong>
    </div>
-   </div>
+</div>
 <div style='text-align:right'>
 <br>
 </div>

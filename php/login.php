@@ -1,103 +1,106 @@
 <?php
 session_start();
 include('../php/conexion.php');
-if(isset($_SESSION['usuarioingresado']))
+if(isset($_SESSION['usuario']))
 {
-    header('Location: ./index.php');
+    header('Location: ./index2.php');
+    exit();
 }
 ?>
 
 <!doctype html>
-<html lang="en">
+<html lang="es">
     <head>
-        <title>Login | REGISTRO</title>
-        <!-- Required meta tags -->
+        <title>Iniciar Sesión / Registro - Crocomidat</title>
         <meta charset="utf-8" />
-        <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1, shrink-to-fit=no"
-        />
-
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         <!-- Bootstrap CSS v5.2.1 -->
         <link
             href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
             rel="stylesheet"
-            integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
             crossorigin="anonymous"
         />
-        <link rel="stylesheet" href="../estilos/login.css">
-        <link rel="stylesheet" href="../estilos/style.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <link rel="stylesheet" href="../estilos/login.css?v=<?php echo time(); ?>">
         <link rel="icon" href="../img/logo.png" type="image/x-icon">
+        <style>
+            body {
+                background: #f8fafc;
+                font-family: 'Poppins', sans-serif;
+                margin: 0;
+                padding: 0;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+            .navbar-custom {
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+                box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+                border-bottom: 1px solid #e2e8f0;
+            }
+            .navbar-custom .nav-link {
+                color: #334155 !important;
+                font-weight: 500;
+            }
+            .navbar-custom .nav-link:hover {
+                color: #65a30d !important;
+            }
+            .login-container {
+                flex-grow: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 100px 20px 40px 20px;
+            }
+        </style>
     </head>
 
-    <body class="bg-black" id="body-login">
-
-    <!-- HEADER DE LA PÁGINA -->
-    <header>
-            <nav class="navbar navbar-expand-lg navbar-light bg-black fixed-top">
-
+    <body>
+        <header>
+            <nav class="navbar navbar-expand-lg navbar-light fixed-top navbar-custom">
                 <div class="container">
-                  <a href="#" class="navbar-brand fw-bold fs-4 text-light"><span class="fw-bold fs-4" style="color: yellowgreen;">Croco</span>midat</a>
-                  <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                  data-bs-target="#navbar-start" aria-controls="navbar-start" aria-expanded="false"
-                  aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
-                
-                  <div class="collapse navbar-collapse" id="navbar-start">
-                
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                <a href="../index.php" class="nav-link text-light">Volver</a>
-                </li>
-                </ul>
-            
-                <div class="d-flex" role="search">
-                                <a class="btn botones" style="color: #9acd32;" href="./php/login.php">
-                                    <i class="bi bi-person-plus-fill"></i>
-                                </a>
-                            </div>
-                  </div>
+                    <a href="../index.php" class="navbar-brand fw-bold fs-4" style="color: #0f172a;">
+                        <img src="../img/logo.png" alt="Crocomidat Logo" width="38" height="38" class="d-inline-block align-text-top me-2" style="filter: drop-shadow(0 2px 4px rgba(101,163,13,0.3));">
+                        <span style="color: #65a30d;">Croco</span>midat
+                    </a>
+                    <div class="ms-auto">
+                        <a href="../index.php" class="btn btn-outline-secondary btn-sm" style="border-radius: 8px; font-weight: 500;">
+                            <i class="bi bi-arrow-left"></i> Volver al Inicio
+                        </a>
+                    </div>
                 </div>
-                </nav>
+            </nav>
         </header>
         
-        <!-- ESTE ES EL FORMULARIO DE REGISTRO -->
-<div class="main">
-    <input type="checkbox" aria-hidden="true" id="chk" >
-    <div class="signup">
-        <form action="usuario_registrar.php" method="POST" id="formulario1" >
-            <label for="chk" aria-hidden="true">Registrarse</label>
-            <input type="text" name="nombre" id="nombre" placeholder="Nombre de usuario" required autocomplete="off" style="color: white;">
+        <div class="login-container">
+            <div class="main">
+                <input type="checkbox" aria-hidden="true" id="chk">
+                
+                <!-- REGISTRO -->
+                <div class="signup">
+                    <form action="usuario_registrar.php" method="POST" id="formulario1">
+                        <label for="chk" aria-hidden="true">Registrarse</label>
+                        <input type="text" name="nombre" id="nombre" placeholder="Nombre completo" required autocomplete="off">
+                        <input type="email" name="email" id="email" placeholder="Correo electrónico" required autocomplete="off">
+                        <input type="password" name="contraseña" id="contraseña" placeholder="Contraseña segura" required autocomplete="off">
+                        <button type="submit" name="Registrarse">Crear Cuenta</button>
+                    </form>
+                </div>
 
-            <input type="email" name="email" id="email" placeholder="Correo" required  autocomplete="off" style="color: white;">
+                <!-- LOGIN -->
+                <div class="login">
+                    <form method="post" id="formulario" action="usuario_login.php">
+                        <label for="chk" aria-hidden="true">Iniciar Sesión</label>
+                        <input type="email" name="email" id="email_login" placeholder="Correo electrónico" required autocomplete="off">
+                        <input type="password" name="contraseña" id="contraseña_login" placeholder="Contraseña" required autocomplete="off">
+                        <button type="submit" name="IniciarSesion" id="btnEnviar">Entrar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-            <input type="password" name="contraseña" id="contraseña" placeholder="Contraseña" required  autocomplete="off" style="color: white;">
-            <button type="submit" name="Registrarse">Registrarse</button>
-        </form>
-    </div>
-        <!-- ESTE ES EL FORMULARIO DE LOGIN -->
-    <div class="login">
-        <form method="post" id="formulario" action="usuario_login.php">
-            <label for="chk" aria-hidden="true">Login</label>
-            <input type="email" name="email" id="email" placeholder="Correo" required autocomplete="off"  style="color: white;">
-            <input type="password" name="contraseña" id="contraseña" placeholder="Contraseña" required autocomplete="off" style="color: white;">
-            <button type="submit" name="IniciarSesion" id="btnEnviar">Login</button>
-        </form>
-    </div>
-</div>
-
-
-        <!-- Bootstrap JavaScript Libraries -->
-        <script
-            src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-            integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-            crossorigin="anonymous"
-        ></script>
-
-        <script
-            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
-            integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
-            crossorigin="anonymous"
-        ></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     </body>
-    
 </html>
