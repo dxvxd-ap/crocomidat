@@ -1,135 +1,112 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+if (!isset($_SESSION['usuario'])) {
+    header("Location: ../index.php");
+    exit();
+}
 include('conexion.php');
-include("barra_lateral.php");
 ?>
-<html>
-    
-<title>Comentarios Tabla</title>
-<link rel="icon" href="../img/logo.png" type="image/x-icon">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comentarios Tabla - Crocomidat</title>
+    <link rel="stylesheet" href="estilo.css?v=<?php echo time(); ?>">
+    <link rel="icon" href="../img/logo.png" type="image/x-icon">
+</head>
 <body>
+<?php include("barra_lateral.php"); ?>
 <div class="ContenedorPrincipal">  
 <?php
 $filasmax = 7;
-if (isset($_GET['pag']))
-   {
-       $pagina = $_GET['pag'];
-   } else
-   {
-       $pagina = 1;
-   }
-if(isset($_POST['btnbuscar']))
-{
-$buscar = $_POST['txtbuscar'];
+$pagina = isset($_GET['pag']) ? (int)$_GET['pag'] : 1;
+if ($pagina < 1) $pagina = 1;
 
-
-$sqlusu = mysqli_query($conn, "SELECT c.id_comment, c.creationdatecm, loc.textcomment 
-from comments c where c.id_comment like '".$buscar."%'");
-
-
+if (isset($_POST['btnbuscar'])) {
+    $buscar = $_POST['txtbuscar'];
+    $stmt = mysqli_prepare($conn, "SELECT c.id_comment, c.creationdatecm, c.textcomment FROM comments c WHERE c.id_comment LIKE ? OR c.textcomment LIKE ?");
+    $param_buscar = "%" . $buscar . "%";
+    mysqli_stmt_bind_param($stmt, "ss", $param_buscar, $param_buscar);
+    mysqli_stmt_execute($stmt);
+    $sqlusu = mysqli_stmt_get_result($stmt);
+} else {
+    $offset = ($pagina - 1) * $filasmax;
+    $stmt = mysqli_prepare($conn, "SELECT c.id_comment, c.creationdatecm, c.textcomment FROM comments c ORDER BY c.id_comment ASC LIMIT ?, ?");
+    mysqli_stmt_bind_param($stmt, "ii", $offset, $filasmax);
+    mysqli_stmt_execute($stmt);
+    $sqlusu = mysqli_stmt_get_result($stmt);
 }
-else
-{
-$sqlusu = mysqli_query($conn, "SELECT c.id_comment, c.creationdatecm, c.textcomment 
-from comments c ORDER BY c.id_comment ASC LIMIT " . (($pagina - 1) * $filasmax)  . "," . $filasmax);
-}
-   $resultadoMaximo = mysqli_query($conn, "SELECT count(*) as num_comments FROM comments");    
-   $maxusutabla = mysqli_fetch_assoc($resultadoMaximo)['num_comments'];
-  
-   ?>
 
-
+$resultadoMaximo = mysqli_query($conn, "SELECT count(*) as num_comments FROM comments");    
+$maxusutabla = mysqli_fetch_assoc($resultadoMaximo)['num_comments'];
+?>
 
 <div class="ContenedorTabla">
-   <form method="POST" style="padding:20px; margin-top: 30px;">
-   <h1 style="color:white;">Lista de comentarios</h1>
-  
-   <div class="ContBuscar">
-   <div style="float: left;">
-   <a href="comentarios_tabla.php" class="BotonesTeam" style="background-color: yellowgreen; font-weight:bold;">Inicio</a>
-   <input class="BotonesTeam" style="background-color: yellowgreen; font-weight:bold;" type="submit" value="Buscar" name="btnbuscar">
-   <input class="CajaTextoBuscar" type="text" name="txtbuscar"  placeholder="Ingresar el id del comentario" autocomplete="off" >
-   </div>
-   <div style="float:right;">
-   <?php echo "<a class='BotonesTeam5' href=\"comentarios_registrar.php?pag=$pagina\">Agregar comentario</a>";?>
-   </div>
-   </div>
-           </form>
+   <form method="POST">
+       <h1>Lista de comentarios</h1>
+       <div class="ContBuscar">
+           <div>
+               <a href="comentarios_tabla.php" class="BotonesTeam"><i class="bi bi-arrow-clockwise"></i> Inicio</a>
+               <input class="CajaTextoBuscar" type="text" name="txtbuscar" placeholder="Buscar por ID o texto..." autocomplete="off">
+               <button class="BotonesTeam" type="submit" name="btnbuscar"><i class="bi bi-search"></i> Buscar</button>
+           </div>
+           <div>
+               <?php echo "<a class='BotonesTeam5' href=\"comentarios_registrar.php?pag=$pagina\"><i class=\"bi bi-chat-left-text-fill\"></i> Agregar comentario</a>";?>
+           </div>
+       </div>
+   </form>
    <table>
-           <tr>
-           <th>Id</th>
-           <th>Fecha</th>
-           <th>Comentario</th>
-           <th>Acciones</th>
-           </tr>
-       <?php
-       while ($mostrar = mysqli_fetch_assoc($sqlusu))
-       {
-          
-           echo "<tr style='background:#101010; color:white;'>";
-           echo "<td>".$mostrar['id_comment']."</td>";
-           echo "<td>".$mostrar['creationdatecm']."</td>";
-           echo "<td>".$mostrar['textcomment']."</td>";
-           echo "<td style='width:24%'>
-           <a class='BotonesTeam1' href=\"comentarios_ver.php?id=$mostrar[id_comment]&pag=$pagina\">&#x1F50D;</a>
-           <a class='BotonesTeam2' href=\"comentarios_modificar.php?id=$mostrar[id_comment]&pag=$pagina\">&#128397;</a>
-           <a class='BotonesTeam3' href=\"comentarios_eliminar.php?id=$mostrar[id_comment]&pag=$pagina\" onClick=\"return confirm('¿Estás seguro de eliminar el comentario $mostrar[id_comment]?')\">&#10006;</a>
-           </td>"; 
-          
-       }
-       ?>
+        <thead>
+            <tr>
+                <th style="width: 70px;">Id</th>
+                <th style="width: 150px;">Fecha</th>
+                <th>Comentario</th>
+                <th style="text-align: center; width: 140px;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php
+        if ($sqlusu && mysqli_num_rows($sqlusu) > 0) {
+            while ($mostrar = mysqli_fetch_assoc($sqlusu))
+            {
+                echo "<tr>";
+                echo "<td><strong style='color: #65a30d;'>#".htmlspecialchars($mostrar['id_comment'])."</strong></td>";
+                echo "<td><i class='bi bi-calendar3' style='color: #64748b; margin-right: 6px;'></i><span style='color: #475569; font-size: 0.9rem;'>".htmlspecialchars($mostrar['creationdatecm'])."</span></td>";
+                echo "<td><span style='color: #1e293b;'>".htmlspecialchars($mostrar['textcomment'])."</span></td>";
+                echo "<td style='text-align: center; white-space: nowrap;'>
+                <a class='BotonesTeam1' title='Ver comentario' href=\"comentarios_ver.php?id=".$mostrar['id_comment']."&pag=$pagina\"><i class=\"bi bi-eye-fill\"></i></a>
+                <a class='BotonesTeam2' title='Modificar' href=\"comentarios_modificar.php?id=".$mostrar['id_comment']."&pag=$pagina\"><i class=\"bi bi-pencil-fill\"></i></a>
+                <a class='BotonesTeam3' title='Eliminar' href=\"comentarios_eliminar.php?id=".$mostrar['id_comment']."&pag=$pagina\" onClick=\"return confirm('¿Estás seguro de eliminar el comentario #".htmlspecialchars($mostrar['id_comment'])."?')\"><i class=\"bi bi-trash-fill\"></i></a>
+                </td>"; 
+                echo "</tr>";
+            }
+        } else {
+            echo "<tr><td colspan='4' style='text-align: center; padding: 30px; color: var(--text-muted);'>No se encontraron comentarios registrados.</td></tr>";
+        }
+        ?>
+        </tbody>
    </table>
-   
 
-   
-
-
-   <div style='text-align:right'>
-   <br>
-   <?php echo "Total de comentarios: ".$maxusutabla;?>
+   <div style='text-align:right; margin-top: 16px; color: var(--text-muted); font-size: 0.9rem;'>
+       Total de comentarios: <strong style="color: var(--primary-lime);"><?php echo $maxusutabla;?></strong>
    </div>
-   </div>
-<div style='text-align:right'>
-<br>
 </div>
-<div style="text-align:center; font-weight:bold;">
+
+<div style="text-align:center; margin-top: 24px;">
 <?php
-if (isset($_GET['pag'])) {
-if ($_GET['pag'] > 1) {
-?>
-<a class="BotonesTeam4" href="comentarios_tabla.php?pag=<?php echo $_GET['pag'] - 1; ?>">Anterior</a>
-<?php
-}
-else
-{
-?>
-<a class="BotonesTeam4" href="#" style="pointer-events: none">Anterior</a>
-<?php
-}
-?>
-<?php
-}
-else
-{
-?>
-<a class="BotonesTeam4" href="#" style="pointer-events: none">Anterior</a>
-<?php
-}
-if (isset($_GET['pag'])) {
-if ((($pagina) * $filasmax) < $maxusutabla) {
-?>
-<a class="BotonesTeam4" href="locales_tabla.php?pag=<?php echo $_GET['pag'] + 1; ?>">Siguiente</a>
-<?php
+if ($pagina > 1) {
+    echo "<a class='BotonesTeam4' href='comentarios_tabla.php?pag=".($pagina - 1)."'>Anterior</a> ";
 } else {
-?>
-<a class="BotonesTeam4" href="#" style="pointer-events: none">Siguiente</a>
-<?php
+    echo "<a class='BotonesTeam4' href='#' style='pointer-events: none; opacity: 0.5;'>Anterior</a> ";
 }
-?>
-<?php
+
+if (($pagina * $filasmax) < $maxusutabla) {
+    echo "<a class='BotonesTeam4' href='comentarios_tabla.php?pag=".($pagina + 1)."'>Siguiente</a>";
 } else {
-?>
-<a class="BotonesTeam4" href="locales_tabla.php?pag=2">Siguiente</a>
-<?php
+    echo "<a class='BotonesTeam4' href='#' style='pointer-events: none; opacity: 0.5;'>Siguiente</a>";
 }
 ?>
 </div>
